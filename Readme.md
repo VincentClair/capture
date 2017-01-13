@@ -4,7 +4,7 @@ A simple screenshot web service powered by [Express](http://expressjs.com) and [
 
 ## Setup
 
-First [install](http://code.google.com/p/phantomjs/wiki/Installation) phantomjs, then clone this repo and install the deps:
+First [download](http://phantomjs.org/download.html) phantomjs, then clone this repo and install the deps:
 
 ```
 $ npm install
@@ -14,7 +14,8 @@ Run the app:
 
 ```
 $ node app
-Express server listening on port 3000
+Phantomjs internal server listening on port 3001
+Express server listening on 127.0.0.1:3000
 ```
 
 ## Usage
