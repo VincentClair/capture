@@ -7,16 +7,16 @@ var RasterizerService = require('./lib/rasterizerService');
 var FileCleanerService = require('./lib/fileCleanerService');
 
 process.on('uncaughtException', function (err) {
-  console.error("[uncaughtException]", err);
-  process.exit(1);
+    console.error('[uncaughtException]', err);
+    process.exit(1);
 });
 
 process.on('SIGTERM', function () {
-  process.exit(0);
+    process.exit(0);
 });
 
 process.on('SIGINT', function () {
-  process.exit(0);
+    process.exit(0);
 });
 
 // web service
@@ -27,7 +27,7 @@ app.set('rasterizerService', new RasterizerService(config.rasterizer).startServi
 app.set('fileCleanerService', new FileCleanerService(config.cache.lifetime));
 
 if (app.get('env') == 'development') {
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+    app.use(express.errorHandler({dumpExceptions: true, showStack: true}));
 }
 
 require('./routes')(app, config.server.useCors);

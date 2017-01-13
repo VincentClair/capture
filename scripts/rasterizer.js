@@ -8,20 +8,27 @@
  */
 var system = require('system');
 
-var args = system.args; 
+var args = system.args;
 
-var basePath = system.args[1] || '/tmp/';
+var basePath = args[1] || '/tmp/';
 
-var port  = system.args[2] || 3001;
+var port = args[2] || 3001;
 
-var defaultViewportSize = system.args[3] || '';
+var defaultViewportSize = args[3] || '';
 defaultViewportSize = defaultViewportSize.split('x');
 defaultViewportSize = {
-  width: ~~defaultViewportSize[0] || 1024,
-  height: ~~defaultViewportSize[1] || 600
+    width: ~~defaultViewportSize[0] || 1024,
+    height: ~~defaultViewportSize[1] || 600
 };
 
-var pageSettings = ['javascriptEnabled', 'loadImages', 'localToRemoteUrlAccessEnabled', 'userAgent', 'userName', 'password'];
+var pageSettings = [
+    'javascriptEnabled',
+    'loadImages',
+    'localToRemoteUrlAccessEnabled',
+    'userAgent',
+    'userName',
+    'password'
+];
 
 var server, service;
 
@@ -54,60 +61,61 @@ server = require('webserver').create();
  * javascriptEnabled: false
  * userAgent: Mozilla/5.0 (iPhone; U; CPU like Mac OS X; en) AppleWebKit/420+
  */
-service = server.listen(port, function(request, response) {
-  if (request.url == '/healthCheck') {
-    response.statusCode = 200;
-    response.write('up');
-    response.close();
-    return;
-  }
-  if (!request.headers.url) {
-    response.statusCode = 400;
-    response.write('Error: Request must contain an url header' + "\n");
-    response.close();
-    return;
-  }
-  var url = request.headers.url;
-  var path = basePath + (request.headers.filename || (url.replace(new RegExp('https?://'), '').replace(/\//g, '.') + '.png'));
-  var page = new WebPage();
-  page.onResourceError = function(resourceError) {
-    page.error_reason = resourceError.errorString;
-  };
-  var delay = request.headers.delay || 0;
-  try {
-    page.viewportSize = {
-      width: request.headers.width || defaultViewportSize.width,
-      height: request.headers.height || defaultViewportSize.height
-    };
-    if (request.headers.clipRect) {
-      page.clipRect = JSON.parse(request.headers.clipRect);
-    }
-    for (name in pageSettings) {
-      if (value = request.headers[pageSettings[name]]) {
-        value = (value == 'false') ? false : ((value == 'true') ? true : value);
-        page.settings[pageSettings[name]] = value;
-      }
-    }
-  } catch (err) {
-    response.statusCode = 500;
-    response.write('Error while parsing headers: ' + err.message);
-    return response.close();
-  }
-  page.open(url, function(status) {
-    if (status == 'success') {
-      window.setTimeout(function () {
-        page.render(path);
-        response.write('Success: Screenshot saved to ' + path + "\n");
-        page.release();
+service = server.listen(port, function (request, response) {
+    if (request.url == '/healthCheck') {
+        response.statusCode = 200;
+        response.write('up');
         response.close();
-      }, delay);
-    } else {
-      response.write('Error: Url returned status ' + status + ' - ' + page.error_reason + "\n");
-      page.release();
-      response.close();
+        return;
     }
-  });
-  // must start the response now, or phantom closes the connection
-  response.statusCode = 200;
-  response.write('');
+    if (!request.headers.url) {
+        response.statusCode = 400;
+        response.write('Error: Request must contain an url header' + "\n");
+        response.close();
+        return;
+    }
+    var url = request.headers.url;
+    var path = basePath
+        + (request.headers.filename || (url.replace(new RegExp('https?://'), '').replace(/\//g, '.') + '.png'));
+    var page = new WebPage();
+    page.onResourceError = function (resourceError) {
+        page.error_reason = resourceError.errorString;
+    };
+    var delay = request.headers.delay || 0;
+    try {
+        page.viewportSize = {
+            width: request.headers.width || defaultViewportSize.width,
+            height: request.headers.height || defaultViewportSize.height
+        };
+        if (request.headers.clipRect) {
+            page.clipRect = JSON.parse(request.headers.clipRect);
+        }
+        for (name in pageSettings) {
+            if (pageSettings.hasOwnProperty(name) && (value = request.headers[pageSettings[name]])) {
+                value = (value == 'false') ? false : ((value == 'true') ? true : value);
+                page.settings[pageSettings[name]] = value;
+            }
+        }
+    } catch (err) {
+        response.statusCode = 500;
+        response.write('Error while parsing headers: ' + err.message);
+        return response.close();
+    }
+    page.open(url, function (status) {
+        if (status == 'success') {
+            window.setTimeout(function () {
+                page.render(path);
+                response.write('Success: Screenshot saved to ' + path + "\n");
+                page.release();
+                response.close();
+            }, delay);
+        } else {
+            response.write('Error: Url returned status ' + status + ' - ' + page.error_reason + "\n");
+            page.release();
+            response.close();
+        }
+    });
+    // must start the response now, or phantom closes the connection
+    response.statusCode = 200;
+    response.write('');
 });
