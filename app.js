@@ -31,5 +31,5 @@ if (app.get('env') == 'development') {
 }
 
 require('./routes')(app, config.server.useCors);
-app.listen(config.server.port, config.server.host);
+app.listen(config.server.port);
 console.log('Express server listening on ' + config.server.host + ':' + config.server.port);
