@@ -1,7 +1,6 @@
 var utils = require('../lib/utils');
 var join = require('path').join;
 var fs = require('fs');
-var path = require('path');
 var request = require('request');
 
 module.exports = function (app, useCors) {
@@ -10,11 +9,12 @@ module.exports = function (app, useCors) {
 
     // routes
     app.get('/', function (req, res, next) {
-        if (!req.param('url', false)) {
+        var rawUrl = req.query.url || false;
+        if (!rawUrl) {
             return res.redirect('/usage.html');
         }
 
-        var url = utils.url(req.param('url'));
+        var url = utils.url(rawUrl);
         // required options
         var options = {
             uri: 'http://localhost:' + rasterizerService.getPort() + '/',
@@ -32,8 +32,9 @@ module.exports = function (app, useCors) {
             'password',
             'delay'
         ].forEach(function (name) {
-            if (req.param(name, false)) {
-                options.headers[name] = req.param(name);
+            var header = req.query[name] || false;
+            if (header) {
+                options.headers[name] = header;
             }
         });
 
@@ -42,7 +43,7 @@ module.exports = function (app, useCors) {
 
         var filePath = join(rasterizerService.getPath(), filename);
 
-        var callbackUrl = req.param('callback', false) ? utils.url(req.param('callback')) : false;
+        var callbackUrl = req.query.callback ? utils.url(req.query.callback) : false;
 
         if (fs.existsSync(filePath)) {
             console.log('Request for %s - Found in cache', url);
@@ -93,12 +94,12 @@ module.exports = function (app, useCors) {
 
     var callRasterizer = function (rasterizerOptions, callback) {
         request.get(rasterizerOptions, function (error, response, body) {
-            if (error || response.statusCode != 200) {
+            if (error || response.statusCode !== 200) {
                 console.log('Error while requesting the rasterizer: %s', error.message);
                 rasterizerService.restartService();
                 return callback(new Error(body));
             }
-            else if (body.indexOf('Error: ') == 0) {
+            if (body.indexOf('Error: ') === 0) {
                 var errmsg = body.substring(7);
                 console.log('Error while requesting the rasterizer: %s', errmsg);
                 return callback(new Error(errmsg));
@@ -129,7 +130,7 @@ module.exports = function (app, useCors) {
             res.setHeader("Access-Control-Allow-Origin", "*");
             res.setHeader("Access-Control-Expose-Headers", "Content-Type");
         }
-        res.sendfile(imagePath, function (err) {
+        res.sendFile(imagePath, function (err) {
             fileCleanerService.addFile(imagePath);
             callback(err);
         });

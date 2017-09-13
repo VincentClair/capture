@@ -1,5 +1,9 @@
-node_modules
+.idea
+
 config/development.yaml
 config/production.yaml
 config/runtime.json
-.idea
+
+node_modules
+tmp
+phantomjs
