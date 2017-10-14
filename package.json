@@ -1,5 +1,5 @@
 {
-  "name": "screenshot-as-a-service",
+  "name": "capture",
   "description": "Website screenshot service powered by node.js and phantomjs",
   "version": "1.1.0",
   "repository": "https://github.com/fzaninotto/screenshot-as-a-service",
